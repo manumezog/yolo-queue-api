@@ -18,3 +18,4 @@ Thumbs.db
 # Stress test local outputs (prevents clogging your repo with test images)
 stress_output_*.jpg
 queue_output_*.jpg
+yolov8n.pt
