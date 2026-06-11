@@ -4,13 +4,22 @@ FROM python:3.11-slim
 # 2. Set the working directory inside the container
 WORKDIR /code
 
-# 3. Copy our requirements file first to install dependencies
+# 3. Install system libraries required by OpenCV (missing from slim base image)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglib2.0-0 \
+    libgl1 \
+    libxcb1 \
+    libsm6 \
+    libxext6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# 4. Copy our requirements file first to install dependencies
 COPY ./requirements.txt /code/requirements.txt
 
-# 4. Install the Python packages listed in requirements.txt
+# 5. Install the Python packages listed in requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# 5. Pre-download YOLOv8 weights at build time so the container never needs
+# 6. Pre-download YOLOv8 weights at build time so the container never needs
 #    to reach out to GitHub at runtime (HF Spaces blocks/times-out that download).
 RUN python -c "\
 import urllib.request, os; \
@@ -20,11 +29,11 @@ print(f'Downloading {url} -> {dest}'); \
 urllib.request.urlretrieve(url, dest); \
 print(f'Done — {os.path.getsize(dest):,} bytes')"
 
-# 6. Copy the rest of our application code into the container
+# 7. Copy the rest of our application code into the container
 COPY . .
 
-# 7. Expose the port FastAPI runs on inside the container
+# 8. Expose the port FastAPI runs on inside the container
 EXPOSE 7860
 
-# 8. Start Uvicorn, pointing to port 7860 (Hugging Face's default port)
+# 9. Start Uvicorn, pointing to port 7860 (Hugging Face's default port)
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
